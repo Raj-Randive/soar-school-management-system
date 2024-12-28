@@ -1,8 +1,9 @@
 const jwt = require("jsonwebtoken");
+const config = require("../../config/index.config.js");
 
 const generateToken = (user) => {
   const payload = { id: user._id, role: user.role };
-  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
+  return jwt.sign(payload, config.JWT_SECRET, { expiresIn: "1d" });
 };
 
 const verifyToken = (token) => {

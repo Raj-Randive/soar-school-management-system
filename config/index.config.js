@@ -18,6 +18,7 @@ const MONGO_URI                        = process.env.MONGO_URI || `mongodb://loc
 
 const LONG_TOKEN_SECRET                = process.env.LONG_TOKEN_SECRET || null;
 const SHORT_TOKEN_SECRET               = process.env.SHORT_TOKEN_SECRET || null;
+const JWT_SECRET                       = process.env.JWT_SECRET || null;
 
 if(!LONG_TOKEN_SECRET || !SHORT_TOKEN_SECRET) {
     throw Error('missing .env variables check index.config');
@@ -34,7 +35,8 @@ config = {
     SHORT_TOKEN_SECRET,
     SERVICE_NAME,
     REDIS_PORT,
-    REDIS_HOST
+    REDIS_HOST,
+    JWT_SECRET
 }
 
 module.exports = config;

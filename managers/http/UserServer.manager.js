@@ -27,8 +27,6 @@ module.exports = class UserServer {
             console.error(err.stack)
             res.status(500).send('Something broke!')
         });
-        
-        // let server = http.createServer(app);
 
         app.use("/api/auth", authRoutes);
         
