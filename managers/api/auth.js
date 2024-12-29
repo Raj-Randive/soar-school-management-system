@@ -2,10 +2,11 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const User = require("../entities/User.mongoModel.js");
 const { generateToken } = require("../token/jwt.js");
+
 const ResponseDispatcher = require("../response_dispatcher/responseDispatcher.manager.js");
+const dispatcher = new ResponseDispatcher();
 
 const router = express.Router();
-const dispatcher = new ResponseDispatcher();
 
 // Register
 router.post("/register", async (req, res) => {

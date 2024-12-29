@@ -3,6 +3,7 @@ const cors              = require('cors');
 const app               = express();
 const config            = require('../../config/index.config.js');
 const authRoutes = require("../api/auth.js");
+const schoolRoutes = require("../api/school.js");
 
 module.exports = class UserServer {
     constructor({config, managers}){
@@ -29,8 +30,7 @@ module.exports = class UserServer {
         });
 
         app.use("/api/auth", authRoutes);
-        
-        // app.use("/api/schools", schoolRoutes);
+        app.use("/api/school", schoolRoutes);
 
         app.get('/', (req, res) => {
             res.status(200).send('Server is running!!');

@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["superadmin", "school-admin"],
+      enum: ["superadmin", "schooladmin"],
       required: true,
     },
     school_id: {
@@ -25,8 +25,8 @@ const userSchema = new mongoose.Schema(
       ref: "School",
       validate: {
         validator: function (value) {
-          // Only validate `school_id` if the role is "school-admin"
-          return this.role === "school-admin" ? !!value : true;
+          // Only validate `school_id` if the role is "schooadmin"
+          return this.role === "schooladmin" ? !!value : true;
         },
         message: "school_id is required for school-admin users.",
       },
