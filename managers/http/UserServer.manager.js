@@ -4,6 +4,8 @@ const app               = express();
 const config            = require('../../config/index.config.js');
 const authRoutes = require("../api/auth.js");
 const schoolRoutes = require("../api/school.js");
+const classroomRoutes = require("../api/classroom.js");
+const studentRoutes = require("../api/students.js");
 
 module.exports = class UserServer {
     constructor({config, managers}){
@@ -31,6 +33,8 @@ module.exports = class UserServer {
 
         app.use("/api/auth", authRoutes);
         app.use("/api/school", schoolRoutes);
+        app.use("/api/classroom", classroomRoutes);
+        app.use("/api/student", studentRoutes);
 
         app.get('/', (req, res) => {
             res.status(200).send('Server is running!!');
