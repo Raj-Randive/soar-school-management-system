@@ -1,6 +1,7 @@
 const express               = require('express');
 const cors                  = require('cors');
 const helmet                = require('helmet');
+const path = require("path");
 
 const config                = require('./config/index.config.js');
 const ManagersLoader        = require('./loaders/ManagersLoader.js');
@@ -62,7 +63,7 @@ app.use("/api/classroom", apiRateLimiter, classroomRoutes);
 app.use("/api/student", apiRateLimiter, studentRoutes);
 
 app.get('/', (req, res) => {
-    res.status(200).send('Server is running!!');
+    res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 app.listen(config.USER_PORT, () => {
