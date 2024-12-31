@@ -1,38 +1,57 @@
 const express = require("express");
+const { body, param } = require("express-validator");
 const router = express.Router();
-const Classroom = require("../entities/Classroom.mongoModel.js");
-const School = require("../entities/School.mongoModel.js");
-const rbac = require("../../mws/__rbac.js");
 
-const ResponseDispatcher = require("../response_dispatcher/responseDispatcher.manager.js");
+const {Classroom, School} = require("../../libs/globalImports.js");
+
+const rbac = require("../../mws/__rbac.js");
+const handleValidationErrors = require("../../mws/__validationErrors.js");
+
+const ResponseDispatcher = require("../response_dispatcher/ResponseDispatcher.manager.js");
 const dispatcher = new ResponseDispatcher();
 
 // List all classrooms in a school (school-admins)
-router.get("/:school_id", rbac(["schooladmin", "superadmin"]), async (req, res) => {
-  try {
-    const classrooms = await Classroom.find({ school_id: req.params.school_id });
-    return dispatcher.dispatch(res, {
-      ok: true,
-      code: 200,
-      data: classrooms,
-      message: "Classrooms retrieved successfully",
-    });
-  } catch (error) {
-    return dispatcher.dispatch(res, {
-      ok: false,
-      code: 500,
-      message: "Internal server error",
-      errors: [error.message],
-    });
+router.get(
+  "/:school_id",
+  rbac(["schooladmin", "superadmin"]),
+  [param("school_id").isMongoId().withMessage("Invalid school ID")],
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const classrooms = await Classroom.find({ school_id: req.params.school_id });
+      return dispatcher.dispatch(res, {
+        ok: true,
+        code: 200,
+        data: classrooms,
+        message: "Classrooms retrieved successfully",
+      });
+    } catch (error) {
+      return dispatcher.dispatch(res, {
+        ok: false,
+        code: 500,
+        message: "Internal server error",
+        errors: [error.message],
+      });
+    }
   }
-});
+);
 
 // Add a new classroom (schooladmins & superadmins)
-router.post("/:school_id", rbac(["schooladmin", "superadmin"]), async (req, res) => {
+router.post(
+  "/:school_id",
+  rbac(["schooladmin", "superadmin"]),
+  [
+    param("school_id").isMongoId().withMessage("Invalid school ID"),
+    body("name").notEmpty().withMessage("Classroom name is required"),
+    body("capacity").isInt({ min: 1 }).withMessage("Capacity must be a positive integer"),
+    body("resources").optional().isArray().withMessage("Resources must be an array"),
+  ],
+  handleValidationErrors,
+  async (req, res) => {
     try {
       const { name, capacity, resources } = req.body;
       const school = await School.findById(req.params.school_id);
-  
+
       if (!school) {
         return dispatcher.dispatch(res, {
           ok: false,
@@ -40,21 +59,12 @@ router.post("/:school_id", rbac(["schooladmin", "superadmin"]), async (req, res)
           message: "School not found",
         });
       }
-  
-      if (!name || !capacity) {
-        return dispatcher.dispatch(res, {
-          ok: false,
-          code: 400,
-          message: "Classroom name and capacity are required",
-        });
-      }
-  
-      // Check if classroom name already exists in the school
+
       const existingClassroom = await Classroom.findOne({
         name,
         school_id: req.params.school_id,
       });
-  
+
       if (existingClassroom) {
         return dispatcher.dispatch(res, {
           ok: false,
@@ -62,7 +72,7 @@ router.post("/:school_id", rbac(["schooladmin", "superadmin"]), async (req, res)
           message: "A classroom with the same name already exists in this school",
         });
       }
-  
+
       const classroom = new Classroom({
         name,
         school_id: req.params.school_id,
@@ -70,7 +80,7 @@ router.post("/:school_id", rbac(["schooladmin", "superadmin"]), async (req, res)
         resources: resources || [],
       });
       await classroom.save();
-  
+
       return dispatcher.dispatch(res, {
         ok: true,
         code: 201,
@@ -85,104 +95,128 @@ router.post("/:school_id", rbac(["schooladmin", "superadmin"]), async (req, res)
         errors: [error.message],
       });
     }
-});
+  }
+);
 
 // Get details of a specific classroom
-router.get("/:id/details", rbac(["schooladmin", "superadmin"]), async (req, res) => {
-  try {
-    const classroom = await Classroom.findById(req.params.id);
+router.get(
+  "/:id/details",
+  rbac(["schooladmin", "superadmin"]),
+  [param("id").isMongoId().withMessage("Invalid classroom ID")],
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const classroom = await Classroom.findById(req.params.id);
 
-    if (!classroom) {
+      if (!classroom) {
+        return dispatcher.dispatch(res, {
+          ok: false,
+          code: 404,
+          message: "Classroom not found",
+        });
+      }
+
+      return dispatcher.dispatch(res, {
+        ok: true,
+        code: 200,
+        data: classroom,
+        message: "Classroom retrieved successfully",
+      });
+    } catch (error) {
       return dispatcher.dispatch(res, {
         ok: false,
-        code: 404,
-        message: "Classroom not found",
+        code: 500,
+        message: "Internal server error",
+        errors: [error.message],
       });
     }
-
-    return dispatcher.dispatch(res, {
-      ok: true,
-      code: 200,
-      data: classroom,
-      message: "Classroom retrieved successfully",
-    });
-  } catch (error) {
-    return dispatcher.dispatch(res, {
-      ok: false,
-      code: 500,
-      message: "Internal server error",
-      errors: [error.message],
-    });
   }
-});
+);
 
 // Update classroom details (schooladmins)
-router.put("/:id/update", rbac(["schooladmin", "superadmin"]), async (req, res) => {
-  try {
-    const { name, capacity, resources } = req.body;
+router.put(
+  "/:id/update",
+  rbac(["schooladmin", "superadmin"]),
+  [
+    param("id").isMongoId().withMessage("Invalid classroom ID"),
+    body("name").optional().notEmpty().withMessage("Classroom name cannot be empty"),
+    body("capacity").optional().isInt({ min: 1 }).withMessage("Capacity must be a positive integer"),
+    body("resources").optional().isArray().withMessage("Resources must be an array"),
+  ],
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { name, capacity, resources } = req.body;
 
-    const classroom = await Classroom.findById(req.params.id);
-    if (!classroom) {
-      return dispatcher.dispatch(res, {
-        ok: false,
-        code: 404,
-        message: "Classroom not found",
-      });
-    }
+      const classroom = await Classroom.findById(req.params.id);
+      if (!classroom) {
+        return dispatcher.dispatch(res, {
+          ok: false,
+          code: 404,
+          message: "Classroom not found",
+        });
+      }
 
-    classroom.name = name || classroom.name;
-    classroom.capacity = capacity || classroom.capacity;
-    
-    if (resources && Array.isArray(resources)) {
+      classroom.name = name || classroom.name;
+      classroom.capacity = capacity || classroom.capacity;
+
+      if (resources && Array.isArray(resources)) {
         const uniqueResources = [...new Set([...classroom.resources, ...resources])];
         classroom.resources = uniqueResources;
-    }  
+      }
 
-    await classroom.save();
+      await classroom.save();
 
-    return dispatcher.dispatch(res, {
-      ok: true,
-      code: 200,
-      data: classroom,
-      message: "Classroom updated successfully",
-    });
-  } catch (error) {
-    return dispatcher.dispatch(res, {
-      ok: false,
-      code: 500,
-      message: "Internal server error",
-      errors: [error.message],
-    });
-  }
-});
-
-// Remove a classroom (schooladmins)
-router.delete("/:id", rbac(["schooladmin", "superadmin"]), async (req, res) => {
-  try {
-    const classroom = await Classroom.findById(req.params.id);
-
-    if (!classroom) {
+      return dispatcher.dispatch(res, {
+        ok: true,
+        code: 200,
+        data: classroom,
+        message: "Classroom updated successfully",
+      });
+    } catch (error) {
       return dispatcher.dispatch(res, {
         ok: false,
-        code: 404,
-        message: "Classroom not found",
+        code: 500,
+        message: "Internal server error",
+        errors: [error.message],
       });
     }
-
-    await Classroom.findByIdAndDelete(req.params.id);
-    return dispatcher.dispatch(res, {
-      ok: true,
-      code: 200,
-      message: "Classroom deleted successfully",
-    });
-  } catch (error) {
-    return dispatcher.dispatch(res, {
-      ok: false,
-      code: 500,
-      message: "Internal server error",
-      errors: [error.message],
-    });
   }
-});
+);
+
+// Remove a classroom (schooladmins)
+router.delete(
+  "/:id",
+  rbac(["schooladmin", "superadmin"]),
+  [param("id").isMongoId().withMessage("Invalid classroom ID")],
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const classroom = await Classroom.findById(req.params.id);
+
+      if (!classroom) {
+        return dispatcher.dispatch(res, {
+          ok: false,
+          code: 404,
+          message: "Classroom not found",
+        });
+      }
+
+      await Classroom.findByIdAndDelete(req.params.id);
+      return dispatcher.dispatch(res, {
+        ok: true,
+        code: 200,
+        message: "Classroom deleted successfully",
+      });
+    } catch (error) {
+      return dispatcher.dispatch(res, {
+        ok: false,
+        code: 500,
+        message: "Internal server error",
+        errors: [error.message],
+      });
+    }
+  }
+);
 
 module.exports = router;
