@@ -1,7 +1,3 @@
-
-<!-- ![Logo](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/th5xamgrr6se0x5ro4g6.png) -->
-
-
 # School Management System API
 
 A robust RESTful API for managing schools, users, and administrative roles, built with Node.js, Express, and MongoDB. This project is designed to simplify school administration tasks such as managing schools, associating admins, and implementing and user roles with Role-Based Access Control (RBAC).
@@ -116,11 +112,6 @@ To run tests, run the following command
   npm run test
 ```
 
-
-## Demo
-
-gif or link to demo
-
 <br/>
 
 ## API Documentation
@@ -130,7 +121,7 @@ gif or link to demo
 
 ## Database Schema Design
 
-[Database Schema Design - Click here to see database design](https://documenter.getpostman.com/view/26850434/2sAYJ6DfSX)
+[Database Schema Design - Click here to see database design](https://app.eraser.io/workspace/vUr2xyHnzaaRt8yVJn6B?origin=share)
 
 <br/>
 
@@ -191,19 +182,12 @@ gif or link to demo
 
 
 
+
+
 <br/>
 
 
-<!-- ## Deployment
-
-To deploy this project run
-
-```bash
-  npm run deploy
-``` -->
-
-
-## Authors
+## Author
 
 - [@raj-randive](https://github.com/Raj-Randive)
 
